@@ -8,19 +8,6 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 
 #############################################################
-# les paramètres de l'option
-############################################################# 
-
-data = yf.Ticker("NVDA").history(period="3mo", interval="1d")
-ST = np.array(data['Close'].values)
-# Calcul du temps à l'échéance pour chaque jour
-tau = np.array([(len(ST) - 1 - i)/252 for i in range(len(ST))])
-tau = np.maximum(tau, 1/252)  # éviter tau=0
-K = ST[0]  # prix d'exercice
-r = 0.04  # taux sans risque annuel
-sigma = 0.18  # volatilité annuelle
-
-#############################################################
 # fonctions Black-Scholes et delta
 ############################################################# 
 
@@ -92,117 +79,135 @@ def GK_vol(data):
     
     return vol 
 
-####################################################################################
-# calcul de la stratégie de delta-hedging avec différentes volatilités
-#################################################################################### 
+def main():
+    #############################################################
+    # les paramètres de l'option
+    ############################################################# 
 
-### volatilité choisie 
-call_prices = black_scholes_call_price(ST, K, r, sigma, tau)
-deltas = black_scholes_delta(ST, K, r, sigma, tau)
-portfolio, bank_account = simple_delta_hedging(call_prices, deltas, ST, r)
+    data = yf.Ticker("NVDA").history(period="3mo", interval="1d")
+    ST = np.array(data['Close'].values)
+    # Calcul du temps à l'échéance pour chaque jour
+    tau = np.array([(len(ST) - 1 - i)/252 for i in range(len(ST))])
+    tau = np.maximum(tau, 1/252)  # éviter tau=0
+    K = ST[0]  # prix d'exercice
+    r = 0.04  # taux sans risque annuel
+    sigma = 0.18  # volatilité annuelle
+
+    ####################################################################################
+    # calcul de la stratégie de delta-hedging avec différentes volatilités
+    #################################################################################### 
+
+    ### volatilité choisie 
+    call_prices = black_scholes_call_price(ST, K, r, sigma, tau)
+    deltas = black_scholes_delta(ST, K, r, sigma, tau)
+    portfolio, bank_account = simple_delta_hedging(call_prices, deltas, ST, r)
 
 
-### volatilité log-returns
-sigma_log = vol_logreturns(ST)
-call_prices_log = black_scholes_call_price(ST, K, r, sigma_log, tau)
-deltas_log = black_scholes_delta(ST, K, r, sigma_log, tau)
-portfolio_log, bank_account_log = simple_delta_hedging(call_prices_log, deltas_log, ST, r)
+    ### volatilité log-returns
+    sigma_log = vol_logreturns(ST)
+    call_prices_log = black_scholes_call_price(ST, K, r, sigma_log, tau)
+    deltas_log = black_scholes_delta(ST, K, r, sigma_log, tau)
+    portfolio_log, bank_account_log = simple_delta_hedging(call_prices_log, deltas_log, ST, r)
 
 
-### volatilité de Garman-Klass
-sigma_gk = GK_vol(data)
-call_prices_gk = black_scholes_call_price(ST, K, r, sigma_gk, tau)
-deltas_gk = black_scholes_delta(ST, K, r, sigma_gk, tau)
-portfolio_gk, bank_account_gk = simple_delta_hedging(call_prices_gk, deltas_gk, ST, r)
+    ### volatilité de Garman-Klass
+    sigma_gk = GK_vol(data)
+    call_prices_gk = black_scholes_call_price(ST, K, r, sigma_gk, tau)
+    deltas_gk = black_scholes_delta(ST, K, r, sigma_gk, tau)
+    portfolio_gk, bank_account_gk = simple_delta_hedging(call_prices_gk, deltas_gk, ST, r)
 
-###################################################################
-# affichage de l'évolution du prix de l'option selon la volatilité
-###################################################################
+    ###################################################################
+    # affichage de l'évolution du prix de l'option selon la volatilité
+    ###################################################################
 
-sigmas = np.array([sigma, sigma_gk, sigma_log])
+    sigmas = np.array([sigma, sigma_gk, sigma_log])
 
-plt.figure(figsize=(12, 6))
-for s in sigmas:
-    call_prices_s = black_scholes_call_price(ST, K, r, s, tau)
-    plt.plot(call_prices_s, label=f" volatilité ={s:.4f}")
+    plt.figure(figsize=(12, 6))
+    for s in sigmas:
+        call_prices_s = black_scholes_call_price(ST, K, r, s, tau)
+        plt.plot(call_prices_s, label=f" volatilité ={s:.4f}")
 
-plt.title("évolution du prix du Call selon la volatilité")
-plt.xlabel("Jours")
-plt.ylabel("Prix du Call")
-plt.legend() 
-plt.grid()
-plt.show()
+    plt.title("évolution du prix du Call selon la volatilité")
+    plt.xlabel("Jours")
+    plt.ylabel("Prix du Call")
+    plt.legend() 
+    plt.grid()
+    plt.show()
 
-###################################################################
-# affichage de l'évolution du delta de l'option selon la volatilité
-###################################################################
+    ###################################################################
+    # affichage de l'évolution du delta de l'option selon la volatilité
+    ###################################################################
 
-plt.figure(figsize=(12, 6))
-for s in sigmas:
-    deltas_S = black_scholes_delta(ST, K, r, s, tau)
-    plt.plot(deltas_S, label=f" volatilité ={s:.4f}")
+    plt.figure(figsize=(12, 6))
+    for s in sigmas:
+        deltas_S = black_scholes_delta(ST, K, r, s, tau)
+        plt.plot(deltas_S, label=f" volatilité ={s:.4f}")
 
-plt.title("évolution du delta selon la volatilité")
-plt.xlabel("Jours")
-plt.ylabel("Delta")
-plt.legend() 
-plt.grid()
-plt.show()
+    plt.title("évolution du delta selon la volatilité")
+    plt.xlabel("Jours")
+    plt.ylabel("Delta")
+    plt.legend() 
+    plt.grid()
+    plt.show()
 
-###################################################################
-# affichage de l'évolution du compte bancaire selon la volatilité
-###################################################################
+    ###################################################################
+    # affichage de l'évolution du compte bancaire selon la volatilité
+    ###################################################################
 
-plt.figure(figsize=(12, 6))
-plt.plot(bank_account, label=f" volatilité choisie ={sigma:.3f}")
-plt.plot(bank_account_log, label=f" volatilité log-returns ={sigma_log:.3f}")
-plt.plot(bank_account_gk, label=f" volatilité Garman-Klass ={sigma_gk:.3f}")
-plt.title("évolution du compte bancaire selon la volatilité")
-plt.xlabel("Jours")
-plt.ylabel("Valeur")
-plt.legend()
-plt.grid()
-plt.show()
+    plt.figure(figsize=(12, 6))
+    plt.plot(bank_account, label=f" volatilité choisie ={sigma:.3f}")
+    plt.plot(bank_account_log, label=f" volatilité log-returns ={sigma_log:.3f}")
+    plt.plot(bank_account_gk, label=f" volatilité Garman-Klass ={sigma_gk:.3f}")
+    plt.title("évolution du compte bancaire selon la volatilité")
+    plt.xlabel("Jours")
+    plt.ylabel("Valeur")
+    plt.legend()
+    plt.grid()
+    plt.show()
 
-#######################################################################
-# affichage de la stratégie de delta-hedging pour la volatilité choisie
-#######################################################################
+    #######################################################################
+    # affichage de la stratégie de delta-hedging pour la volatilité choisie
+    #######################################################################
 
-plt.figure(figsize=(12, 6))
-plt.plot(portfolio, label="Portefeuille")
-plt.plot(call_prices, label="Prix du Call")
-plt.title(label = f"Comparaison de notre stratégie de couverture avec volatilité choisie ={sigma:.3f} vs prix du Call")
-plt.xlabel("Jours")
-plt.ylabel("Valeur")
-plt.legend()
-plt.grid()
-plt.show()
+    plt.figure(figsize=(12, 6))
+    plt.plot(portfolio, label="Portefeuille")
+    plt.plot(call_prices, label="Prix du Call")
+    plt.title(label = f"Comparaison de notre stratégie de couverture avec volatilité choisie ={sigma:.3f} vs prix du Call")
+    plt.xlabel("Jours")
+    plt.ylabel("Valeur")
+    plt.legend()
+    plt.grid()
+    plt.show()
 
-###########################################################################
-# affichage de la stratégie de delta-hedging pour la volatilité log-returns
-###########################################################################
+    ###########################################################################
+    # affichage de la stratégie de delta-hedging pour la volatilité log-returns
+    ###########################################################################
 
-plt.figure(figsize=(12, 6))
-plt.plot(portfolio_log, label="Portefeuille")
-plt.plot(call_prices_log, label="Prix du Call")
-plt.title(label = f"Comparaison de notre stratégie de couverture avec volatilité log-returns ={sigma_log:.3f} vs prix du Call")
-plt.xlabel("Jours")
-plt.ylabel("Valeur")
-plt.legend()
-plt.grid()
-plt.show()
+    plt.figure(figsize=(12, 6))
+    plt.plot(portfolio_log, label="Portefeuille")
+    plt.plot(call_prices_log, label="Prix du Call")
+    plt.title(label = f"Comparaison de notre stratégie de couverture avec volatilité log-returns ={sigma_log:.3f} vs prix du Call")
+    plt.xlabel("Jours")
+    plt.ylabel("Valeur")
+    plt.legend()
+    plt.grid()
+    plt.show()
 
-###########################################################################
-# affichage de la stratégie de delta-hedging pour la volatilité Garman-Klass
-###########################################################################
+    ###########################################################################
+    # affichage de la stratégie de delta-hedging pour la volatilité Garman-Klass
+    ###########################################################################
 
-plt.figure(figsize=(12, 6))
-plt.plot(portfolio_gk, label="Portefeuille")
-plt.plot(call_prices_gk, label="Prix du Call")
-plt.title(label = f"Comparaison de notre stratégie de couverture avec volatilité Garman-Klass ={sigma_gk:.3f} vs prix du Call")
-plt.xlabel("Jours")
-plt.ylabel("Valeur")
-plt.legend()
-plt.grid()
-plt.show()
+    plt.figure(figsize=(12, 6))
+    plt.plot(portfolio_gk, label="Portefeuille")
+    plt.plot(call_prices_gk, label="Prix du Call")
+    plt.title(label = f"Comparaison de notre stratégie de couverture avec volatilité Garman-Klass ={sigma_gk:.3f} vs prix du Call")
+    plt.xlabel("Jours")
+    plt.ylabel("Valeur")
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+
+if __name__ == "__main__":
+    main()
 
