@@ -6,11 +6,11 @@
 
 ## 📋 Description
 
-Ce projet implémente une stratégie de **réplication dynamique d'options** (dynamic option replication) basée sur la méthode du **Delta-Hedging** (couverture en Delta).
+Ce projet implémente une stratégie de **réplication dynamique d'options** basée sur la méthode du **Delta-Hedging** .
 
-L'objectif est de synthétiser le payoff d'un Call Européen en construisant un portefeuille auto-financé (*self-financing portfolio*) composé d'actifs risqués (actions) et d'actifs sans risque (cash), rééquilibré quotidiennement selon les sensibilités du modèle de Black-Scholes.
+L'objectif est de synthétiser le payoff d'un Call Européen en construisant un portefeuille auto-financé composé d'actifs risqués et d'actifs sans risque , rééquilibré quotidiennement selon les sensibilités du modèle de Black-Scholes.
 
-> **Note Méthodologique :** Dans le cadre de projet pédagogique, certaines courbes utilisent la volatilité réalisée comme input. Ce choix permet d'isoler l'erreur de couverture due à la discrétisation temporelle en neutralisant le bruit lié à l'estimation de la volatilité (Vega PnL).
+> **Note Méthodologique :** Dans le cadre de projet pédagogique, certaines courbes utilisent la volatilité réalisée comme input. Ce choix permet d'isoler l'erreur de couverture due à la discrétisation temporelle en neutralisant le bruit lié à l'estimation de la volatilité .
 
 ## 🎯 Objectifs
 
