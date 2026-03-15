@@ -123,4 +123,4 @@ Ce projet est uniquement à but pédagogique et permet de :
 
 ## 👨‍💻 Auteur
 
-Alexandre R. - Master ISIFAR, Université Paris Cité
+Alexandre R. - Université Paris Cité
