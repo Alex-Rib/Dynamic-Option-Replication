@@ -1,126 +1,127 @@
-# Réplication Dynamique d'Options par Delta-Hedging
+# Dynamic Option Replication via Delta-Hedging
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![Finance](https://img.shields.io/badge/Finance-Derivatives-green)
+![Tests](https://img.shields.io/badge/Tests-pytest-purple)
+![Lint](https://img.shields.io/badge/Lint-ruff-orange)
 ![Status](https://img.shields.io/badge/Status-Educational-orange)
 
 ## 📋 Description
 
-Ce projet implémente une stratégie de **réplication dynamique d'options** basée sur la méthode du **Delta-Hedging** .
+This project implements a **dynamic option replication** strategy based on **delta-hedging**.
 
-L'objectif est de synthétiser le payoff d'un Call Européen en construisant un portefeuille auto-financé composé d'actifs risqués et d'actifs sans risque , rééquilibré quotidiennement selon les sensibilités du modèle de Black-Scholes.
+The goal is to synthesize the payoff of a European call by building a self-financing portfolio of the risky asset and a risk-free cash account, rebalanced daily according to the Black-Scholes sensitivities.
 
-> **Note Méthodologique :** Dans le cadre de projet pédagogique, certaines courbes utilisent la volatilité réalisée comme input. Ce choix permet d'isoler l'erreur de couverture due à la discrétisation temporelle en neutralisant le bruit lié à l'estimation de la volatilité .
+> **Methodological note:** in this educational setting, some curves use the realized volatility as input. This isolates the hedging error due to time discretization by neutralizing the noise coming from volatility estimation.
 
-## 🎯 Objectifs
+## 🎯 Objectives
 
-- **Démontrer la réplication :** Prouver qu'un portefeuille $\Delta S + B$ converge vers le prix de l'option.
-- **Gestion de Trésorerie :** Visualiser les flux de financement (Leverage) nécessaires au maintien de la position.
-- **Analyse de Volatilité :** Comparer l'impact de différents estimateurs sur la couverture.
+- **Demonstrate replication:** show that a portfolio $\Delta S + B$ tracks the option price.
+- **Cash management:** visualize the funding flows (leverage) required to hold the position.
+- **Volatility analysis:** compare the impact of different estimators on the hedge.
 
-## 📊 Méthode 
+## 📊 Method
 
-### 1. Modèle de Black-Scholes
-Le prix du Call et son Delta ($\Delta$) sont calculés selon les formules fermées :
+### 1. Black-Scholes model
+
+The call price and its delta ($\Delta$) are computed from the closed-form formulas:
 
 $$C(S_t, t) = S_t \Phi(d_1) - K e^{-r\tau} \Phi(d_2)$$
 
 $$\Delta = \frac{\partial C}{\partial S} = \Phi(d_1)$$
 
-Où :
+where:
 - $d_1 = \frac{\ln(S_t/K) + (r + \sigma^2/2)\tau}{\sigma\sqrt{\tau}}$
 - $d_2 = d_1 - \sigma\sqrt{\tau}$
 
-### 2. Algorithme de Réplication
-À chaque pas de temps $t$, nous ajustons le portefeuille pour qu'il soit **Delta-Neutre** par rapport à l'option vendue :
+### 2. Replication algorithm
 
-1.  Calcul du nouveau $\Delta_t$.
-2.  Achat/Vente de $( \Delta_t - \Delta_{t-1} )$ actions au prix marché $S_t$.
-3.  Le coût de l'opération est financé par le compte bancaire $B_t$ (qui accumule des intérêts au taux $r$).
+The **same self-financing rule** is applied at every step, including the last one:
 
-L'équation du portefeuille est : $V_t = \Delta_t S_t + B_t$
+1. Accrue interest on the cash account: $B_i \leftarrow B_{i-1} e^{r\,dt}$
+2. Rebalance to the new delta, funded from cash: $B_i \leftarrow B_i - (\Delta_i - \Delta_{i-1}) S_i$
+3. Mark the portfolio: $V_i = \Delta_i S_i + B_i$
 
-## 🔧 Fonctionnalités
+There is no special-cased liquidation at maturity. As $\tau \to 0$ the delta converges to 0 or 1, so the final rebalancing trade unwinds the position on its own, and $V_T$ is compared directly to the payoff $(S_T - K)^+$.
 
-### Trois estimateurs de volatilité
+## 🔧 Features
 
-1. **Volatilité fixe** : volatilité choisie manuellement (σ = 18%)
-2. **Volatilité des log-returns** : calculée à partir des rendements logarithmiques historiques
-3. **Volatilité de Garman-Klass** : estimateur utilisant les prix Open/High/Low/Close
+### Three volatility estimators
 
-### Visualisations
+1. **Fixed volatility:** chosen manually ($\sigma = 18\%$)
+2. **Log-returns volatility:** annualized standard deviation of historical log returns
+3. **Garman-Klass volatility:** OHLC-based estimator
 
-- Évolution du prix du call selon la volatilité
-- Évolution du delta selon la volatilité
-- Évolution du compte bancaire
-- Comparaison portefeuille de réplication vs prix théorique du call (pour chaque volatilité)
+### Visualizations
 
-## 📦 Dépendances
+- Call price by volatility
+- Delta by volatility
+- Cash account evolution
+- Replicating portfolio vs theoretical call price (one figure per volatility)
 
-```python
+## 📦 Dependencies
+
+```
 numpy
 scipy
 yfinance
 matplotlib
 ```
 
-Installation :
 ```bash
 pip install numpy scipy yfinance matplotlib
 ```
 
-## 🚀 Utilisation
+## 🚀 Usage
 
-Le script utilise des données réelles de NVIDIA (NVDA) sur les 3 derniers mois :
+The script pulls real NVIDIA (NVDA) daily data over the last three months. If the
+download fails (no network or yfinance not installed), it falls back to a simulated
+geometric Brownian path so the script stays runnable offline.
 
-```python
-python hedging.py
+```bash
+python plot_hedging.py
 ```
 
-Le programme génère automatiquement 6 graphiques comparant les performances de la stratégie de delta-hedging avec les trois paramètres de volatilité.
+## 📈 Parameters
 
-## 📈 Paramètres
+Set at the top of `plot_hedging.py`:
 
-Les paramètres principaux peuvent être modifiés dans le script :
+- `TICKER`: ticker symbol (default `"NVDA"`)
+- `PERIOD`: history window (default `"3mo"`)
+- `RATE`: annual risk-free rate (default `0.04`)
+- `SIGMA_FIXED`: chosen annual volatility (default `0.18`)
 
-- `Ticker` : symbole de l'action (défaut : "NVDA")
-- `period` : période historique (défaut : "3mo")
-- `K` : prix d'exercice (défaut : prix initial $S_0$)
-- `r` : taux sans risque annuel (défaut : 4%)
-- `sigma` : volatilité annuelle choisie (défaut : 18%)
+The strike defaults to the initial price $S_0$ (ATM at inception).
 
-## 📊 Résultats
+## 🔬 Structure
 
-Le code permet de visualiser :
-- L'efficacité de la réplication dynamique
-- L'impact du choix de la volatilité sur la performance de la couverture
-- L'évolution du compte bancaire nécessaire pour maintenir la couverture
+```
+black_scholes.py   # closed-form call price and delta (pure functions)
+volatility.py      # realized log-returns and Garman-Klass estimators
+hedging.py         # DeltaHedger class + HedgingResult dataclass
+plot_hedging.py    # data loading, replication run, plots
+tests/
+    test_hedging.py
+```
 
-## 🔬 Concepts Théoriques
+## 🧪 Tests
 
-### Delta-Hedging
-Stratégie de couverture visant à neutraliser le risque lié aux variations du prix du sous-jacent en ajustant dynamiquement la position en actions.
+```bash
+pip install pytest ruff
+pytest -q
+ruff check .
+```
 
-### Réplication Dynamique
-Construction d'un portefeuille auto-finançant qui réplique le payoff d'un produit dérivé sans détenir directement ce dérivé.
+The suite covers the closed-form Black-Scholes value, the delta bounds and
+monotonicity, the volatility estimators (zero on flat prices, recovery of a known
+GBM sigma), and the core replication property: with fine rebalancing and the true
+volatility, the terminal portfolio value tracks the option payoff.
 
-### Volatilité fixée vs Historique
-Comparaison entre une volatilité fixée a priori et des estimateurs basés sur les données historiques (log-returns, Garman-Klass).
+## 🎓 Scope
 
-## 📝 Notes
+Educational project illustrating hedging mechanics, the Black-Scholes theory in
+practice, and the impact of volatility on replication. Not investment advice.
 
-- Le rééquilibrage est effectué quotidiennement (dt = 1/252)
-- Les intérêts sur le compte bancaire sont calculés en continu
-- Au dernier pas de temps, la position en actions est liquidée
-
-## 🎓 Applications
-
-Ce projet est uniquement à but pédagogique et permet de :
-- Comprendre les mécanismes de couverture en finance de marché
-- Illustrer la théorie de Black-Scholes en pratique
-- Analyser l'impact de la volatilité sur les stratégies de trading
-
-
-## 👨‍💻 Auteur
+## 👨‍💻 Author
 
 Alexandre R. - Université Paris Cité
