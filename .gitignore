@@ -1,28 +1,116 @@
-# Python bytecode / cache
+
+# Python
+
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-*.egg-info/
+*$py.class
+*.so
+.Python
 
-# Virtual envs et dépendances locales
+# Virtual environments
+env/
 venv/
-.env
+ENV/
 .venv/
-pip-wheel-metadata/
+env.bak/
+venv.bak/
 
-# Jupyter
-.ipynb_checkpoints/
+# Packaging / build artifacts
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# macOS
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+
+# Testing / linting / type-checking caches
+
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.cache/
+.tox/
+.nox/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+*.py,cover
+nosetests.xml
+
+
+# Jupyter / IPython
+
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+
+# IDE / editors
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+
+# OS files
+
 .DS_Store
+.DS_Store?
 ._*
-Icon?
 .Spotlight-V100
 .Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
 
-# résultats générés
-data/
-results/
-outputs/
-figures/
+
+# Secrets / environment / credentials  (never commit these)
+
+.env
+.env.*
+*.local
+secrets.*
+*.pem
+*.key
+credentials.json
+config.local.*
+
+
+# Generated plots / output
+
+
+*.png
+*.pdf
+*.jpg
+*.jpeg
+*.gif
+*.svg
+!docs/*.png
+!docs/*.jpg
+!docs/*.svg
